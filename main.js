@@ -14,11 +14,13 @@ const i18n = {
     publications: 'المنشورات',
     tabAll: 'الكل',
     tabBooks: 'كتب',
-    tabArticles: 'دراسات ومقالات محكّمة',
-    tabChapters: 'فصول ومداخل موسوعية',
+    tabArticles: 'دراسات ومقالات',
+    tabChapters: 'فصول ومداخل',
     tabPapers: 'أوراق عمل',
-    tabTalks: 'مداخلات وبودكاست ومقالات صحفية',
-    tabTeaching: 'مواد تعليمية وتقارير وغيرها',
+    tabTalks: 'مداخلات وإعلام',
+    tabTeaching: 'تعليم وتقارير',
+    newestFirst: 'الأحدث أولاً',
+    oldestFirst: 'الأقدم أولاً',
     forthcoming: 'قيد النشر',
     with: 'مع',
     foreword: 'تقديم',
@@ -28,10 +30,16 @@ const i18n = {
     experience: 'الخبرة',
     education: 'التعليم',
     contact: 'تواصل',
+    email: 'البريد الإلكتروني',
     whatsapp: 'واتساب',
     cvAr: 'السيرة الذاتية (عربي)',
-    cvEn: 'CV (English)',
+    cvEn: 'السيرة الذاتية (إنجليزي)',
     qarar: 'مركز قرار',
+    orcid: 'ORCID',
+    academia: 'Academia',
+    linkedin: 'LinkedIn',
+    facebook: 'فيسبوك',
+    youtube: 'يوتيوب',
   },
   en: {
     pageTitle: 'Dr. Rashad Twam',
@@ -47,11 +55,13 @@ const i18n = {
     publications: 'Publications',
     tabAll: 'All',
     tabBooks: 'Books',
-    tabArticles: 'Peer-reviewed & journal articles',
-    tabChapters: 'Chapters & encyclopedia entries',
+    tabArticles: 'Articles',
+    tabChapters: 'Chapters & entries',
     tabPapers: 'Working papers',
-    tabTalks: 'Talks, podcasts & press',
-    tabTeaching: 'Teaching, reports & other',
+    tabTalks: 'Talks & media',
+    tabTeaching: 'Teaching & reports',
+    newestFirst: 'Newest first',
+    oldestFirst: 'Oldest first',
     forthcoming: 'Forthcoming',
     with: 'with',
     foreword: 'Foreword by',
@@ -61,10 +71,16 @@ const i18n = {
     experience: 'Experience',
     education: 'Education',
     contact: 'Contact',
+    email: 'Email',
     whatsapp: 'WhatsApp',
-    cvAr: 'Arabic CV',
-    cvEn: 'English CV',
+    cvAr: 'CV (Arabic)',
+    cvEn: 'CV (English)',
     qarar: 'Qarar Center',
+    orcid: 'ORCID',
+    academia: 'Academia',
+    linkedin: 'LinkedIn',
+    facebook: 'Facebook',
+    youtube: 'YouTube',
   },
 };
 
@@ -92,9 +108,8 @@ const education = [
     en: ['BA in Law', 'Birzeit University', '2008'] },
 ];
 
-// Filter tabs: key in i18n -> which `group` values belong to it (null = all)
-const tabs = [
-  ['tabAll', null],
+// Filters: key in i18n -> which `group` values belong to it
+const filters = [
   ['tabBooks', ['books']],
   ['tabArticles', ['articles']],
   ['tabChapters', ['chapters']],
@@ -104,11 +119,13 @@ const tabs = [
 ];
 
 const FIRST_YEAR_AT_BIRZEIT = 2008;
-const ALL_TAB_LIMIT = 10;
+const ALL_LIMIT = 10;
+const CHECK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
 let lang = 'ar';
 let pubs = [];
-let activeTab = 'tabAll';
+const selected = new Set(); // empty = all
+let newestFirst = true;
 let expanded = false;
 
 const $ = (sel) => document.querySelector(sel);
@@ -140,6 +157,14 @@ function initialLang() {
   return 'ar';
 }
 
+// Fill [data-both] once with both languages; CSS shows the active one.
+document.querySelectorAll('[data-both]').forEach((node) => {
+  const key = node.dataset.both;
+  node.replaceChildren(
+    el('span', { lang: 'ar', dir: 'rtl' }, i18n.ar[key]),
+    el('span', { lang: 'en', dir: 'ltr' }, i18n.en[key]));
+});
+
 function setLang(next) {
   lang = next;
   document.documentElement.lang = lang;
@@ -152,7 +177,11 @@ function setLang(next) {
   document.querySelectorAll('[data-i18n]').forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
-  document.querySelectorAll('.lang-switch button').forEach((b) => {
+  document.querySelectorAll('[data-label]').forEach((node) => {
+    node.setAttribute('aria-label', t(node.dataset.label));
+    node.title = t(node.dataset.label);
+  });
+  document.querySelectorAll('.lang-pill button').forEach((b) => {
     b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
   });
 
@@ -162,7 +191,8 @@ function setLang(next) {
   history.replaceState(null, '', url);
 
   renderCv();
-  if (pubs.length) { renderTabs(); renderPubs(); }
+  renderSort();
+  if (pubs.length) { renderFilters(); renderPubs(); }
 }
 
 /* ---------- Experience & education ---------- */
@@ -181,20 +211,22 @@ function renderCv() {
 
 /* ---------- Publications ---------- */
 
-function inTab(p, key) {
-  const groups = tabs.find(([k]) => k === key)[1];
-  return !groups || groups.includes(p.group);
+function groupsOf(key) {
+  return filters.find(([k]) => k === key)[1];
 }
 
-// Forthcoming first, then newest year first; ties keep the JSON order.
+function isShown(p) {
+  if (!selected.size) return true;
+  return [...selected].some((key) => groupsOf(key).includes(p.group));
+}
+
+// Forthcoming counts as the newest; ties keep the JSON order.
 function sortPubs(list) {
+  const rank = (p) => (p.status === 'Forthcoming' ? 9999 : p.year || 0);
+  const dir = newestFirst ? -1 : 1;
   return list
     .map((p, i) => [p, i])
-    .sort(([a, ai], [b, bi]) => {
-      const af = a.status === 'Forthcoming', bf = b.status === 'Forthcoming';
-      if (af !== bf) return af ? -1 : 1;
-      return (b.year || 0) - (a.year || 0) || ai - bi;
-    })
+    .sort(([a, ai], [b, bi]) => dir * (rank(a) - rank(b)) || ai - bi)
     .map(([p]) => p);
 }
 
@@ -219,45 +251,125 @@ function pubItem(p) {
   const main = el('p', { class: 'main' },
     links[0] ? externalLink(links[0], mainTitle) : mainTitle);
 
-  const meta = el('p', { class: 'meta' }, [p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · '));
+  const meta = el('p', { class: 'meta' },
+    el('span', { class: soon ? 'when soon' : 'when' }, soon ? t('forthcoming') : String(p.year || '')),
+    ' · ' + [p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · '));
   links.slice(1).forEach((href, i) => {
     meta.append(externalLink(href, `${t('link')} ${i + 2}`, { class: 'extra' }));
   });
 
-  return el('li', { class: 'pub' },
-    el('div', { class: soon ? 'year soon' : 'year' }, soon ? t('forthcoming') : String(p.year || '')),
-    el('div', {},
-      main,
-      altTitle ? el('p', { class: 'alt', lang: other(), dir: other() === 'ar' ? 'rtl' : 'ltr' }, altTitle) : null,
-      meta));
+  return el('li', { class: 'pub', 'data-year': soon ? 'soon' : String(p.year || '') },
+    main,
+    altTitle ? el('p', { class: 'alt', lang: other(), dir: other() === 'ar' ? 'rtl' : 'ltr' }, altTitle) : null,
+    meta);
 }
 
-function renderTabs() {
-  $('.tabs').replaceChildren(...tabs.map(([key]) => {
-    const count = pubs.filter((p) => inTab(p, key)).length;
-    const b = el('button', { type: 'button', 'aria-pressed': String(key === activeTab) },
-      t(key) + ' ', el('span', { class: 'count' }, `(${count})`));
-    b.addEventListener('click', () => {
-      activeTab = key;
-      renderTabs();
-      renderPubs();
-    });
-    return b;
-  }));
+function chip(label, count, pressed, onClick) {
+  const b = el('button', { type: 'button', class: 'chip', 'aria-pressed': String(pressed) });
+  if (pressed && label !== t('tabAll')) b.insertAdjacentHTML('beforeend', CHECK_ICON);
+  b.append(label, el('span', { class: 'count' }, String(count)));
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function renderFilters() {
+  const scroll = $('.filters').scrollLeft;
+  const chips = [chip(t('tabAll'), pubs.length, !selected.size, () => {
+    selected.clear();
+    update();
+  })];
+  for (const [key, groups] of filters) {
+    const count = pubs.filter((p) => groups.includes(p.group)).length;
+    chips.push(chip(t(key), count, selected.has(key), () => {
+      selected.has(key) ? selected.delete(key) : selected.add(key);
+      update();
+    }));
+  }
+  $('.filters').replaceChildren(...chips);
+  $('.filters').scrollLeft = scroll;
+}
+
+function renderSort() {
+  $('.sort span').textContent = t(newestFirst ? 'newestFirst' : 'oldestFirst');
+  $('.sort').setAttribute('aria-label', t(newestFirst ? 'newestFirst' : 'oldestFirst'));
 }
 
 function renderPubs() {
-  let list = sortPubs(pubs.filter((p) => inTab(p, activeTab)));
-  const limited = activeTab === 'tabAll' && !expanded && list.length > ALL_TAB_LIMIT;
-  if (limited) list = list.slice(0, ALL_TAB_LIMIT);
+  let list = sortPubs(pubs.filter(isShown));
+  const limited = !selected.size && !expanded && list.length > ALL_LIMIT;
+  if (limited) list = list.slice(0, ALL_LIMIT);
   $('.pub-list').replaceChildren(...list.map(pubItem));
   $('.show-all').hidden = !limited;
+
+  // Start the counter on the list's first real year without rolling to it.
+  const firstYear = list.find((p) => p.status !== 'Forthcoming' && p.year);
+  if (firstYear) {
+    odo.classList.add('instant');
+    setDigits(String(firstYear.year));
+    odo.offsetHeight; // apply before re-enabling the transition
+    odo.classList.remove('instant');
+  }
+  updateYear();
 }
+
+function update() {
+  renderFilters();
+  renderPubs();
+}
+
+$('.sort').addEventListener('click', () => {
+  newestFirst = !newestFirst;
+  renderSort();
+  renderPubs();
+});
 
 $('.show-all').addEventListener('click', () => {
   expanded = true;
   renderPubs();
 });
+
+/* ---------- Sticky year with rolling digits ---------- */
+
+const odo = $('.odo');
+const rail = $('.year-rail');
+const digits = [0, 1, 2, 3].map(() => {
+  const strip = el('span', { class: 'strip' },
+    ...Array.from({ length: 10 }, (_, n) => el('span', {}, String(n))));
+  odo.append(el('span', { class: 'digit' }, strip));
+  return strip;
+});
+
+function setDigits(year) {
+  [...year].forEach((d, i) => {
+    digits[i].style.transform = `translateY(-${d}em)`;
+  });
+}
+
+function showYear(value) {
+  rail.classList.toggle('soon', value === 'soon');
+  $('.year-note').textContent = t('forthcoming');
+  if (/^\d{4}$/.test(value)) setDigits(value);
+}
+
+// The year of the first row still visible under the sticky year.
+function updateYear() {
+  const line = rail.getBoundingClientRect().bottom;
+  const rows = document.querySelectorAll('.pub');
+  let current = rows[0];
+  for (const row of rows) {
+    current = row;
+    if (row.getBoundingClientRect().bottom > line) break;
+  }
+  if (current) showYear(current.dataset.year);
+}
+
+let ticking = false;
+addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => { updateYear(); ticking = false; });
+}, { passive: true });
+addEventListener('resize', updateYear);
 
 /* ---------- Numbers band ---------- */
 
@@ -298,7 +410,7 @@ function renderStats() {
 
 /* ---------- Start ---------- */
 
-document.querySelectorAll('.lang-switch button').forEach((b) => {
+document.querySelectorAll('.lang-pill button').forEach((b) => {
   b.addEventListener('click', () => setLang(b.dataset.lang));
 });
 
@@ -318,8 +430,7 @@ fetch('publications.json')
   .then((data) => {
     pubs = data;
     renderStats();
-    renderTabs();
-    renderPubs();
+    update();
   })
   .catch(() => {
     $('.pub-list').replaceChildren(el('li', { class: 'pub-error' }, t('loadError')));
