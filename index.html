@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>د. رشاد توام</title>
+  <meta name="description" content="د. رشاد توام: مستشار قانوني، باحث وأستاذ جامعي. المدير العام لمركز قرار لأبحاث الشأن العام وعضو هيئة تدريس في جامعة بيرزيت.">
+
+  <!-- Open Graph. TODO: after publishing, change og:image and og:url to full absolute URLs
+       (e.g. https://USERNAME.github.io/rashad-twam/assets/rashad.jpg) so WhatsApp/Facebook can load the image. -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="د. رشاد توام · Dr. Rashad Twam">
+  <meta property="og:description" content="مستشار قانوني · باحث · أستاذ جامعي — Legal Advisor · Scholar · Professor">
+  <meta property="og:image" content="assets/rashad.jpg">
+  <meta property="og:locale" content="ar_AR">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar wrap">
+    <nav class="lang-switch" aria-label="Language">
+      <button type="button" data-lang="ar" lang="ar">العربية</button>
+      <span aria-hidden="true">|</span>
+      <button type="button" data-lang="en" lang="en">English</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro wrap">
+      <!-- TODO: add the photo as assets/rashad.jpg (square, at least 400×400). Until then a grey circle shows. -->
+      <div class="photo">
+        <img src="assets/rashad.jpg" alt="د. رشاد توام" width="168" height="168" onerror="this.remove()">
+      </div>
+      <h1 data-i18n="name">د. رشاد توام</h1>
+      <p class="title" data-i18n="title">مستشار قانوني · باحث · أستاذ جامعي</p>
+      <p class="bio" data-i18n="bio"></p>
+    </section>
+
+    <section class="stats" aria-label="Numbers">
+      <div class="wrap stats-grid">
+        <div class="stat"><span class="num" data-stat="published">0</span><span class="label" data-i18n="statPublished"></span></div>
+        <div class="stat"><span class="num" data-stat="peer">0</span><span class="label" data-i18n="statPeer"></span></div>
+        <div class="stat"><span class="num" data-stat="books">0</span><span class="label" data-i18n="statBooks"></span></div>
+        <div class="stat"><span class="num" data-stat="years">0</span><span class="label" data-i18n="statYears"></span></div>
+      </div>
+    </section>
+
+    <section class="pubs wrap" aria-labelledby="pubs-h">
+      <h2 id="pubs-h" data-i18n="publications"></h2>
+      <div class="tabs" role="group" aria-labelledby="pubs-h"></div>
+      <ol class="pub-list"></ol>
+      <button type="button" class="show-all" data-i18n="showAll" hidden></button>
+    </section>
+
+    <section class="cv wrap">
+      <div>
+        <h2 data-i18n="experience"></h2>
+        <ul class="cv-list" id="experience"></ul>
+      </div>
+      <div>
+        <h2 data-i18n="education"></h2>
+        <ul class="cv-list" id="education"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="contact">
+    <div class="wrap">
+      <h2 data-i18n="contact"></h2>
+      <p class="links">
+        <a href="mailto:rashad.twam@gmail.com" dir="ltr">rashad.twam@gmail.com</a>
+        <a href="https://wa.me/+972599131506" data-i18n="whatsapp"></a>
+      </p>
+      <p class="links">
+        <a href="https://drive.google.com/file/d/1Yq9xrlj20CyM_zVnrG7z_7h5E-0yTfq3/view?usp=sharing" data-i18n="cvAr"></a>
+        <a href="https://drive.google.com/file/d/1U9iHyaqf5zez9pB5JeZPqZE4AtA4EIL2/view?usp=sharing" data-i18n="cvEn" dir="auto"></a>
+        <a href="https://qararcenter.org/" data-i18n="qarar"></a>
+      </p>
+      <p class="links">
+        <a href="https://orcid.org/0009-0006-7310-905X">ORCID</a>
+        <a href="https://birzeit.academia.edu/RashadTwam">Academia</a>
+        <a href="https://www.linkedin.com/in/RTwam/">LinkedIn</a>
+        <a href="https://www.facebook.com/rtwam">Facebook</a>
+        <a href="https://www.youtube.com/@rashadtwam3130">YouTube</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
