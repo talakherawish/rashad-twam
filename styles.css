@@ -297,35 +297,27 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
 /* multiply drops the logo's white square onto the hover tint */
 .icons img { width: 26px; height: 26px; object-fit: contain; mix-blend-mode: multiply; }
 
-/* Email and phone written out, each with a copy button */
-.details {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px 40px;
-  margin: 20px 0 0;
-}
-.details > div { display: flex; flex-direction: column; align-items: center; }
-.details dt { color: var(--muted); font-size: 13px; }
-.details dd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-.details dd a { color: var(--text); font-family: var(--en); text-decoration: none; }
-.details dd a:hover { color: var(--navy); text-decoration: underline; }
-.copy {
-  min-height: 32px;
-  padding-inline: 12px;
-  border: 1px solid var(--line);
+/* Short note after the email address is copied */
+.toast {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  max-width: calc(100% - 32px);
+  padding: 10px 18px;
   border-radius: 999px;
-  color: var(--text-2);
-  font-size: 13px;
-  transition: border-color .2s, color .2s, background-color .2s;
+  background: var(--navy);
+  color: #FFFFFF;
+  font-size: 14px;
+  box-shadow: 0 6px 24px rgba(22, 24, 27, .18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity .25s, transform .25s var(--ease);
 }
-.copy:hover { border-color: var(--navy); color: var(--navy); }
-.copy.done { border-color: var(--navy); background: var(--navy-tint); color: var(--navy); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast span { font-family: var(--en); }
+
 .icons svg { width: 20px; height: 20px; fill: currentColor; }
 .icons svg.line { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .icons svg text {
@@ -357,6 +349,7 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
   .wrap { padding-inline: 16px; }
   /* Thumb-friendly: switch sits at the bottom corner on phones */
   .lang-pill { top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
   .intro { padding-top: 56px; padding-bottom: 56px; }
   h1 { font-size: 32px; }
   h2 { font-size: 24px; }

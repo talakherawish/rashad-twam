@@ -31,9 +31,7 @@ const i18n = {
     education: 'التعليم',
     contact: 'تواصل',
     email: 'البريد الإلكتروني',
-    phone: 'الهاتف',
-    copy: 'نسخ',
-    copied: 'تم النسخ',
+    emailCopied: 'تم نسخ البريد الإلكتروني:',
     whatsapp: 'واتساب',
     cvAr: 'السيرة الذاتية (عربي)',
     cvEn: 'السيرة الذاتية (إنجليزي)',
@@ -75,9 +73,7 @@ const i18n = {
     education: 'Education',
     contact: 'Contact',
     email: 'Email',
-    phone: 'Phone',
-    copy: 'Copy',
-    copied: 'Copied',
+    emailCopied: 'Email address copied:',
     whatsapp: 'WhatsApp',
     cvAr: 'CV (Arabic)',
     cvEn: 'CV (English)',
@@ -444,28 +440,39 @@ document.querySelectorAll('.lang-pill button').forEach((b) => {
   b.addEventListener('click', () => setLang(b.dataset.lang));
 });
 
-document.querySelectorAll('.copy').forEach((b) => {
-  b.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(b.dataset.copy);
-    } catch (e) {
-      // Older or locked-down browsers: copy through a hidden text field.
-      const field = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
-      field.value = b.dataset.copy;
-      document.body.append(field);
-      field.select();
-      const ok = document.execCommand('copy');
-      field.remove();
-      if (!ok) return; // the text is still on the page to select by hand
-    }
-    b.textContent = t('copied');
-    b.classList.add('done');
-    clearTimeout(b.timer);
-    b.timer = setTimeout(() => {
-      b.textContent = t('copy');
-      b.classList.remove('done');
-    }, 2000);
-  });
+/* ---------- Email ---------- */
+
+// Laptops often have no mail app set up, so mailto: does nothing there.
+// Open Gmail's compose window instead, and copy the address for everyone else.
+const EMAIL = 'rashad.twam@gmail.com';
+const emailLink = $('a[data-label="email"]');
+if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  emailLink.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + EMAIL;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    // Older or locked-down browsers: copy through a hidden text field.
+    const field = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+    field.value = text;
+    document.body.append(field);
+    field.select();
+    const ok = document.execCommand('copy');
+    field.remove();
+    return ok;
+  }
+}
+
+const toast = $('.toast');
+emailLink.addEventListener('click', async () => {
+  if (!(await copyText(EMAIL))) return;
+  toast.replaceChildren(t('emailCopied') + ' ', el('span', { dir: 'ltr' }, EMAIL));
+  toast.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => toast.classList.remove('show'), 3000);
 });
 
 // Every external link in the static HTML opens in a new tab.
