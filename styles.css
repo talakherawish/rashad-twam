@@ -295,7 +295,7 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
   background: color-mix(in srgb, var(--brand, var(--navy)) 8%, #FFFFFF);
 }
 /* multiply drops the logo's white square onto the hover tint */
-.icons img { width: 26px; height: 26px; object-fit: contain; mix-blend-mode: multiply; }
+.icons img { width: 32px; height: 32px; object-fit: contain; mix-blend-mode: multiply; }
 
 /* Short note after the email address is copied */
 .toast {
