@@ -37,6 +37,15 @@ ol, ul { padding: 0; list-style: none; }
 a { color: var(--navy); text-underline-offset: 3px; }
 a:hover { color: var(--navy-hover); }
 
+/* Institution names inside running text: quiet until hovered */
+.org-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #C5CBD3;
+  text-decoration-thickness: 1px;
+}
+.org-link:hover { color: var(--navy); text-decoration-color: currentColor; }
+
 button {
   font: inherit;
   color: inherit;
@@ -86,6 +95,22 @@ html[lang="en"] [data-both] > [lang="ar"] { visibility: hidden; }
 }
 .lang-pill button:hover { color: var(--text); }
 .lang-pill button[aria-pressed="true"] { background: var(--navy); color: #FFFFFF; }
+/* Third, round button: jumps to the contact section */
+.to-contact {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-inline-start: 4px;
+  border-radius: 50%;
+  color: var(--text-2);
+  transition: background-color .2s, color .2s;
+}
+.to-contact:hover { background: var(--navy-tint); color: var(--navy); }
+.to-contact svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 /* Intro */
 .intro { max-width: 760px; text-align: center; padding-top: 96px; padding-bottom: 72px; }
@@ -261,10 +286,46 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
   height: 48px;
   border: 1px solid var(--line);
   border-radius: 50%;
-  color: var(--text-2);
-  transition: color .2s, border-color .2s, background-color .2s;
+  /* Each link sets --brand to its service's own colour */
+  color: var(--brand, var(--navy));
+  transition: border-color .2s, background-color .2s;
 }
-.icons a:hover { color: var(--navy); border-color: var(--navy); background: var(--navy-tint); }
+.icons a:hover {
+  border-color: var(--brand, var(--navy));
+  background: color-mix(in srgb, var(--brand, var(--navy)) 8%, #FFFFFF);
+}
+/* multiply drops the logo's white square onto the hover tint */
+.icons img { width: 26px; height: 26px; object-fit: contain; mix-blend-mode: multiply; }
+
+/* Email and phone written out, each with a copy button */
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 40px;
+  margin: 20px 0 0;
+}
+.details > div { display: flex; flex-direction: column; align-items: center; }
+.details dt { color: var(--muted); font-size: 13px; }
+.details dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.details dd a { color: var(--text); font-family: var(--en); text-decoration: none; }
+.details dd a:hover { color: var(--navy); text-decoration: underline; }
+.copy {
+  min-height: 32px;
+  padding-inline: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 13px;
+  transition: border-color .2s, color .2s, background-color .2s;
+}
+.copy:hover { border-color: var(--navy); color: var(--navy); }
+.copy.done { border-color: var(--navy); background: var(--navy-tint); color: var(--navy); }
 .icons svg { width: 20px; height: 20px; fill: currentColor; }
 .icons svg.line { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .icons svg text {

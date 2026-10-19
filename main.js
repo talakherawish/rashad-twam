@@ -31,6 +31,9 @@ const i18n = {
     education: 'التعليم',
     contact: 'تواصل',
     email: 'البريد الإلكتروني',
+    phone: 'الهاتف',
+    copy: 'نسخ',
+    copied: 'تم النسخ',
     whatsapp: 'واتساب',
     cvAr: 'السيرة الذاتية (عربي)',
     cvEn: 'السيرة الذاتية (إنجليزي)',
@@ -72,6 +75,9 @@ const i18n = {
     education: 'Education',
     contact: 'Contact',
     email: 'Email',
+    phone: 'Phone',
+    copy: 'Copy',
+    copied: 'Copied',
     whatsapp: 'WhatsApp',
     cvAr: 'CV (Arabic)',
     cvEn: 'CV (English)',
@@ -107,6 +113,29 @@ const education = [
   { ar: ['بكالوريوس في القانون', 'جامعة بيرزيت', '2008'],
     en: ['BA in Law', 'Birzeit University', '2008'] },
 ];
+
+// Institutions: every mention in the bio, CV and publication venues links to its site.
+const orgs = [
+  ['https://qararcenter.org/', ['Qarar Center for Public Affairs Research', 'Qarar Center', 'مركز قرار لأبحاث الشأن العام', 'مركز قرار']],
+  ['https://www.birzeit.edu/', ['Birzeit University', 'جامعة بيرزيت']],
+  ['https://utm.rnu.tn/', ['Tunis El-Manar University', 'جامعة تونس المنار']],
+  ['https://www.hebron.edu/', ['Hebron University', 'جامعة الخليل']],
+  ['https://moj.pna.ps/', ['Ministry of Justice', 'وزارة العدل']],
+  ['https://pji.pna.ps/', ['Palestinian Judicial Institute', 'المعهد القضائي الفلسطيني']],
+  ['https://adamsmithinternational.com/', ['Adam Smith International']],
+  ['https://84-13-77-162.sslip.io/', ['KARAMA Initiative', 'مبادرة كرامة']],
+];
+
+const orgUrl = new Map(orgs.flatMap(([url, names]) => names.map((n) => [n, url])));
+// Longest names first so "Qarar Center for …" wins over "Qarar Center".
+const orgPattern = new RegExp(
+  '(' + [...orgUrl.keys()].sort((a, b) => b.length - a.length).join('|') + ')');
+
+// Plain text -> text and links, for el(...children).
+function linkOrgs(text) {
+  return String(text).split(orgPattern).map((part, i) =>
+    i % 2 ? externalLink(orgUrl.get(part), part, { class: 'org-link' }) : part);
+}
 
 // Filters: key in i18n -> which `group` values belong to it
 const filters = [
@@ -160,9 +189,10 @@ function initialLang() {
 // Fill [data-both] once with both languages; CSS shows the active one.
 document.querySelectorAll('[data-both]').forEach((node) => {
   const key = node.dataset.both;
+  const fill = key === 'bio' ? linkOrgs : (text) => [text];
   node.replaceChildren(
-    el('span', { lang: 'ar', dir: 'rtl' }, i18n.ar[key]),
-    el('span', { lang: 'en', dir: 'ltr' }, i18n.en[key]));
+    el('span', { lang: 'ar', dir: 'rtl' }, ...fill(i18n.ar[key])),
+    el('span', { lang: 'en', dir: 'ltr' }, ...fill(i18n.en[key])));
 });
 
 function setLang(next) {
@@ -203,7 +233,7 @@ function renderCv() {
       const [role, org, dates] = item[lang];
       return el('li', {},
         el('div', { class: 'role' }, role),
-        el('div', { class: 'org', dir: 'auto' }, org),
+        el('div', { class: 'org', dir: 'auto' }, ...linkOrgs(org)),
         el('div', { class: 'dates' }, dates));
     }));
   }
@@ -253,7 +283,7 @@ function pubItem(p) {
 
   const meta = el('p', { class: 'meta' },
     el('span', { class: soon ? 'when soon' : 'when' }, soon ? t('forthcoming') : String(p.year || '')),
-    ' · ' + [p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · '));
+    ' · ', ...linkOrgs([p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · ')));
   links.slice(1).forEach((href, i) => {
     meta.append(externalLink(href, `${t('link')} ${i + 2}`, { class: 'extra' }));
   });
@@ -412,6 +442,30 @@ function renderStats() {
 
 document.querySelectorAll('.lang-pill button').forEach((b) => {
   b.addEventListener('click', () => setLang(b.dataset.lang));
+});
+
+document.querySelectorAll('.copy').forEach((b) => {
+  b.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(b.dataset.copy);
+    } catch (e) {
+      // Older or locked-down browsers: copy through a hidden text field.
+      const field = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      field.value = b.dataset.copy;
+      document.body.append(field);
+      field.select();
+      const ok = document.execCommand('copy');
+      field.remove();
+      if (!ok) return; // the text is still on the page to select by hand
+    }
+    b.textContent = t('copied');
+    b.classList.add('done');
+    clearTimeout(b.timer);
+    b.timer = setTimeout(() => {
+      b.textContent = t('copy');
+      b.classList.remove('done');
+    }, 2000);
+  });
 });
 
 // Every external link in the static HTML opens in a new tab.
