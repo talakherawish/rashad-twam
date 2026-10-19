@@ -235,14 +235,13 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
 .pub .main { font-size: 18px; font-weight: 600; line-height: 1.6; }
 .pub .main a { color: var(--text); text-decoration: none; }
 .pub .main a:hover { color: var(--navy); text-decoration: underline; }
-.pub .alt { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .pub .meta { margin-top: 6px; color: var(--text-2); font-size: 14px; }
 .pub .when { font-family: var(--en); color: var(--muted); }
 .pub .when.soon { font-family: inherit; }
 .pub .extra { margin-inline-start: 12px; font-size: 13px; }
-/* Keep the other-language title aligned with the column, whatever its direction */
-[dir="rtl"] .pub .alt, [dir="rtl"] .cv-list .org { text-align: right; }
-[dir="ltr"] .pub .alt, [dir="ltr"] .cv-list .org { text-align: left; }
+/* Keep org names aligned with the column, whatever their direction */
+[dir="rtl"] .cv-list .org { text-align: right; }
+[dir="ltr"] .cv-list .org { text-align: left; }
 
 .pub-error { padding-block: 24px; color: var(--text-2); }
 

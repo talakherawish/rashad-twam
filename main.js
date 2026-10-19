@@ -155,7 +155,6 @@ let expanded = false;
 
 const $ = (sel) => document.querySelector(sel);
 const t = (key) => i18n[lang][key];
-const other = () => (lang === 'ar' ? 'en' : 'ar');
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -271,7 +270,6 @@ function peopleLine(p) {
 function pubItem(p) {
   const soon = p.status === 'Forthcoming';
   const mainTitle = p['title_' + lang];
-  const altTitle = p['title_' + other()];
   const links = p.links || [];
 
   const main = el('p', { class: 'main' },
@@ -286,7 +284,6 @@ function pubItem(p) {
 
   return el('li', { class: 'pub', 'data-year': soon ? 'soon' : String(p.year || '') },
     main,
-    altTitle ? el('p', { class: 'alt', lang: other(), dir: other() === 'ar' ? 'rtl' : 'ltr' }, altTitle) : null,
     meta);
 }
 
