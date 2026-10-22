@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- Template for every publication page. Don't edit the files in p/ by hand:
+     run `node scripts/build-pages.js` to regenerate them from this file and
+     publications.json. Only the {{…}} values below differ between pages; the
+     content itself is drawn by publication.js from publications.json. -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}} · د. رشاد توام</title>
+  <meta name="description" content="{{description}}">
+  <link rel="canonical" href="{{url}}">
+
+  <!-- Open Graph (link previews on WhatsApp/Facebook) -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:image" content="https://talakherawish.github.io/rashad-twam/assets/rashad.jpg">
+  <meta property="og:url" content="{{url}}">
+  <meta property="og:site_name" content="د. رشاد توام · Dr. Rashad Twam">
+  <meta property="og:locale" content="ar_AR">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{root}}styles.css">
+</head>
+<body data-pub="{{id}}" data-root="{{root}}">
+  <nav class="lang-pill" aria-label="Language" dir="ltr">
+    <button type="button" data-lang="ar" lang="ar">العربية</button>
+    <button type="button" data-lang="en" lang="en">English</button>
+    <a href="{{root}}#contact" class="to-contact" data-label="contact">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+  </nav>
+
+  <main class="pub-page wrap">
+    <a class="back" href="{{root}}#pubs-h">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <span data-i18n="allPublications">جميع المنشورات</span></a>
+
+    <article>
+      <p class="kicker"></p>
+      <!-- The title is written here too so it shows before (or without) JS -->
+      <h1 class="pub-title">{{title}}</h1>
+      <p class="byline"></p>
+      <dl class="facts"></dl>
+      <section class="abstract" hidden>
+        <h2 data-i18n="abstract"></h2>
+        <div class="abstract-text"></div>
+      </section>
+      <div class="pub-links"></div>
+    </article>
+  </main>
+
+  <script src="{{root}}common.js"></script>
+  <script src="{{root}}publication.js"></script>
+</body>
+</html>
