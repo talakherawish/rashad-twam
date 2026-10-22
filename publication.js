@@ -11,8 +11,9 @@ function fact(label, ...value) {
 }
 
 // Abstracts may hold several paragraphs separated by blank lines.
-function paragraphs(text) {
-  return String(text).split(/\n\s*\n/).map((para) => el('p', { dir: 'auto' }, para.trim()));
+function paragraphs(text, textLang) {
+  return String(text).split(/\n\s*\n/).map((para) =>
+    el('p', { lang: textLang, dir: textLang === 'ar' ? 'rtl' : 'ltr' }, para.trim()));
 }
 
 function renderPub() {
@@ -38,10 +39,13 @@ function renderPub() {
     ...fact(t('date'), soon ? t('forthcoming') : pub['date_' + lang]),
     ...(pub.details ? fact(t('details'), pub.details) : []));
 
-  // Optional: add abstract_ar / abstract_en to publications.json and it shows here.
-  const abstract = pub['abstract_' + lang];
-  $('.abstract').hidden = !abstract;
-  $('.abstract-text').replaceChildren(...(abstract ? paragraphs(abstract) : []));
+  // abstract_ar / abstract_en come from the publications sheet. Many exist
+  // in Arabic only; show that rather than nothing.
+  const other = lang === 'ar' ? 'en' : 'ar';
+  const abstractLang = pub['abstract_' + lang] ? lang : pub['abstract_' + other] ? other : null;
+  $('.abstract').hidden = !abstractLang;
+  $('.abstract-text').replaceChildren(...(abstractLang
+    ? paragraphs(pub['abstract_' + abstractLang], abstractLang) : []));
 
   const links = pub.links || [];
   $('.pub-links').replaceChildren(...links.map((href, i) =>
