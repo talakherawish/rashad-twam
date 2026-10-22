@@ -1493,5 +1493,41 @@
   ],
   "abstract_ar": "شكل ملحق بورقة بعنوان \"لعبة القانون: تحولات العلاقة بين السلطة ومنظمة التحرير الفلسطينية\"، قدمت في ورشة عمل \"التحولات في الفواعل السياسية والمؤسسات الفلسطينية ما بعد اتفاق أوسلو\". مركز رؤية للتنمية السياسية، بالشراكة مع مركز الشرق للأبحاث الاستراتيجية، إسطنبول، 20-19 آذار/ مارس 2022. والورقة قيد النشر ضمن كتاب من إصدار المنظمين.\nهذا الشكل بمنزلة نسخة مطورة ومعدلة لشكل من تصميم الباحث (د. رشاد توام) وردت نسخته الأولى في: معين البرغوثي ورشاد توام. النظام القانوني لمنظمة التحرير الفلسطينية (رام الله: معهد الحقوق بجامعة بيرزيت، 2010)، ص 82",
   "abstract_en": "An annexed chart to a paper entitled \"The Law Game: Transformations of the Relationship Between the Palestinian Authority and PLO\" (forthcoming)."
+ },
+ {
+  "id": 73,
+  "group": "talks",
+  "category_en": "Conference presentation",
+  "category_ar": "مداخلات في مؤتمرات",
+  "title_en": "The New Arab Constitutional Courts: Independence and the Challenge of Populism",
+  "title_ar": "المحاكم الدستورية العربية الجديدة: الاستقلالية وتحدي الشعبوية",
+  "coauthors_en": "Asem Khalil",
+  "coauthors_ar": "بالشراكة مع عاصم خليل",
+  "venue_en": "Conference on the Relationship between Democracy and Systems of Government, Al Iraqia University & International IDEA, Baghdad",
+  "venue_ar": "مؤتمر العلاقة بين الديمقراطية وأنظمة الحكم، الجامعة العراقية، بغداد",
+  "details": "",
+  "date_en": "Jan 2024",
+  "date_ar": "يناير 2024",
+  "year": 2024,
+  "status": "Published",
+  "links": []
+ },
+ {
+  "id": 74,
+  "group": "talks",
+  "category_en": "Conference presentation",
+  "category_ar": "مداخلات في مؤتمرات",
+  "title_en": "Civil-Military Relations in the Arab Region: A New Field and Old Challenges (closed symposium)",
+  "title_ar": "العلاقات المدنية–العسكرية في المنطقة العربية: علم جديد وتحديات قديمة (ندوة مغلقة)",
+  "coauthors_en": "",
+  "coauthors_ar": "",
+  "venue_en": "Rewaq Baghdad Center for Public Policy, Baghdad",
+  "venue_ar": "مركز رواق بغداد للسياسات العامة، بغداد",
+  "details": "",
+  "date_en": "Jan 2024",
+  "date_ar": "يناير 2024",
+  "year": 2024,
+  "status": "Published",
+  "links": []
  }
 ]
