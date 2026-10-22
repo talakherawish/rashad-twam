@@ -43,11 +43,13 @@
     </section>
 
     <section class="stats" aria-label="Numbers">
+      <!-- Final values are written here so they show even without JS;
+           main.js recomputes them from publications.json and counts up -->
       <div class="wrap stats-grid">
-        <div class="stat"><span class="num" data-stat="published">0</span><span class="label" data-both="statPublished"></span></div>
-        <div class="stat"><span class="num" data-stat="peer">0</span><span class="label" data-both="statPeer"></span></div>
-        <div class="stat"><span class="num" data-stat="books">0</span><span class="label" data-both="statBooks"></span></div>
-        <div class="stat"><span class="num" data-stat="years">0</span><span class="label" data-both="statYears"></span></div>
+        <div class="stat"><span class="num" data-stat="published">67</span><span class="label" data-both="statPublished"></span></div>
+        <div class="stat"><span class="num" data-stat="peer">14</span><span class="label" data-both="statPeer"></span></div>
+        <div class="stat"><span class="num" data-stat="books">10</span><span class="label" data-both="statBooks"></span></div>
+        <div class="stat"><span class="num" data-stat="years">18</span><span class="label" data-both="statYears"></span></div>
       </div>
     </section>
 
@@ -73,11 +75,11 @@
     <section class="cv wrap">
       <div>
         <h2 data-i18n="experience"></h2>
-        <ul class="cv-list" id="experience"></ul>
+        <ol class="timeline" id="experience"></ol>
       </div>
       <div>
         <h2 data-i18n="education"></h2>
-        <ul class="cv-list" id="education"></ul>
+        <ol class="timeline" id="education"></ol>
       </div>
     </section>
   </main>

@@ -86,19 +86,20 @@ const i18n = {
   },
 };
 
+// Newest start date first.
 const experience = [
+  { ar: ['خبير قانوني انتخابي', 'Adam Smith International', '2026 – الآن'],
+    en: ['Legal Electoral Expert', 'Adam Smith International', '2026 – present'] },
   { ar: ['المدير العام', 'مركز قرار لأبحاث الشأن العام، رام الله', 'ديسمبر 2025 – الآن'],
     en: ['General Director', 'Qarar Center for Public Affairs Research, Ramallah', 'Dec 2025 – present'] },
-  { ar: ['عضو هيئة تدريس وباحث', 'جامعة بيرزيت', '2008 – الآن'],
-    en: ['Faculty member and researcher', 'Birzeit University', '2008 – present'] },
   { ar: ['مستشار قانوني للوزير', 'وزارة العدل، رام الله', '2014'],
     en: ['Legal Advisor to the Minister', 'Ministry of Justice, Ramallah', '2014'] },
   { ar: ['مستشار قانوني', 'المعهد القضائي الفلسطيني', '2013'],
     en: ['Legal Advisor', 'Palestinian Judicial Institute', '2013'] },
   { ar: ['منسق العيادة القانونية وعضو هيئة تدريس', 'جامعة الخليل', '2011 – 2013'],
     en: ['Legal Clinic Coordinator and Lecturer', 'Hebron University', '2011 – 2013'] },
-  { ar: ['خبير قانوني انتخابي', 'Adam Smith International', '2026 – الآن'],
-    en: ['Legal Electoral Expert', 'Adam Smith International', '2026 – present'] },
+  { ar: ['عضو هيئة تدريس وباحث', 'جامعة بيرزيت', '2008 – الآن'],
+    en: ['Faculty member and researcher', 'Birzeit University', '2008 – present'] },
 ];
 
 const education = [
@@ -227,9 +228,9 @@ function renderCv() {
     $('#' + id).replaceChildren(...items.map((item) => {
       const [role, org, dates] = item[lang];
       return el('li', {},
+        el('div', { class: 'dates' }, dates),
         el('div', { class: 'role' }, role),
-        el('div', { class: 'org', dir: 'auto' }, ...linkOrgs(org)),
-        el('div', { class: 'dates' }, dates));
+        el('div', { class: 'org', dir: 'auto' }, ...linkOrgs(org)));
     }));
   }
 }
@@ -405,10 +406,12 @@ function renderStats() {
     years: new Date().getFullYear() - FIRST_YEAR_AT_BIRZEIT,
   };
   const nums = [...document.querySelectorAll('[data-stat]')];
-  const showFinal = () => nums.forEach((n) => { n.textContent = values[n.dataset.stat]; });
+  // Final values stay in place until the count-up actually starts, so
+  // anything reading the page early (or with no animation) sees the real numbers.
+  nums.forEach((n) => { n.textContent = values[n.dataset.stat]; });
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced || !('IntersectionObserver' in window)) return showFinal();
+  if (reduced || !('IntersectionObserver' in window)) return;
 
   const countUp = () => {
     const start = performance.now();
