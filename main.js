@@ -41,10 +41,12 @@ let pubs = [];
 const selected = new Set(); // empty = all
 let newestFirst = true;
 let expanded = false;
+let query = '';
 
 document.addEventListener('langchange', () => {
   renderCv();
   renderSort();
+  renderSearch();
   if (pubs.length) { renderFilters(); renderPubs(); }
 });
 
@@ -69,8 +71,33 @@ function groupsOf(key) {
 }
 
 function isShown(p) {
+  if (!matchesQuery(p)) return false;
   if (!selected.size) return true;
   return [...selected].some((key) => groupsOf(key).includes(p.group));
+}
+
+// Folds case, Arabic diacritics and letter variants, so "اسرائيل" finds "إسرائيل".
+function fold(text) {
+  return String(text).toLowerCase()
+    .replace(/[ً-ٰٟـ]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي');
+}
+
+// Searches both languages, whichever one the page is shown in.
+const SEARCH_FIELDS = ['title_en', 'title_ar', 'venue_en', 'venue_ar',
+  'coauthors_en', 'coauthors_ar', 'category_en', 'category_ar', 'year'];
+const searchText = new WeakMap();
+
+function matchesQuery(p) {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  if (!searchText.has(p)) searchText.set(p, fold(SEARCH_FIELDS.map((f) => p[f] || '').join(' ')));
+  const text = searchText.get(p);
+  return words.every((w) => text.includes(w));
 }
 
 // Forthcoming counts as the newest; ties keep the JSON order.
@@ -108,12 +135,13 @@ function chip(label, count, pressed, onClick) {
 
 function renderFilters() {
   const scroll = $('.filters').scrollLeft;
-  const chips = [chip(t('tabAll'), pubs.length, !selected.size, () => {
+  const found = pubs.filter(matchesQuery);
+  const chips = [chip(t('tabAll'), found.length, !selected.size, () => {
     selected.clear();
     update();
   })];
   for (const [key, groups] of filters) {
-    const count = pubs.filter((p) => groups.includes(p.group)).length;
+    const count = found.filter((p) => groups.includes(p.group)).length;
     chips.push(chip(t(key), count, selected.has(key), () => {
       selected.has(key) ? selected.delete(key) : selected.add(key);
       update();
@@ -128,11 +156,20 @@ function renderSort() {
   $('.sort').setAttribute('aria-label', t(newestFirst ? 'newestFirst' : 'oldestFirst'));
 }
 
+function renderSearch() {
+  const input = $('.search input');
+  input.placeholder = t('searchPubs');
+  input.setAttribute('aria-label', t('searchPubs'));
+}
+
 function renderPubs() {
   let list = sortPubs(pubs.filter(isShown));
-  const limited = !selected.size && !expanded && list.length > ALL_LIMIT;
+  // A search shows every match.
+  const limited = !selected.size && !query.trim() && !expanded && list.length > ALL_LIMIT;
   if (limited) list = list.slice(0, ALL_LIMIT);
-  $('.pub-list').replaceChildren(...list.map(pubItem));
+  $('.pub-list').replaceChildren(...(list.length
+    ? list.map(pubItem)
+    : [el('li', { class: 'pub-error' }, t('noResults'))]));
   $('.show-all').hidden = !limited;
 
   // Start the counter on the list's first real year without rolling to it.
@@ -155,6 +192,19 @@ $('.sort').addEventListener('click', () => {
   newestFirst = !newestFirst;
   renderSort();
   renderPubs();
+});
+
+$('.search input').addEventListener('input', (e) => {
+  query = e.target.value;
+  update();
+});
+
+$('.search input').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && e.target.value) {
+    e.target.value = '';
+    query = '';
+    update();
+  }
 });
 
 $('.show-all').addEventListener('click', () => {
