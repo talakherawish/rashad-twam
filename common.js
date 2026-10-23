@@ -30,6 +30,12 @@ const i18n = {
     allPublications: 'جميع المنشورات',
     openPublication: 'فتح المنشور',
     abstract: 'الملخص',
+    abstractOther: 'الملخص (بالإنجليزية)',
+    readMore: 'اقرأ المزيد',
+    readLess: 'عرض أقل',
+    newer: 'منشور أحدث',
+    older: 'منشور أقدم',
+    related: 'منشورات من النوع نفسه',
     venue: 'جهة النشر',
     date: 'التاريخ',
     details: 'تفاصيل',
@@ -81,6 +87,12 @@ const i18n = {
     allPublications: 'All publications',
     openPublication: 'Open publication',
     abstract: 'Abstract',
+    abstractOther: 'Abstract (in Arabic)',
+    readMore: 'Read more',
+    readLess: 'Show less',
+    newer: 'Newer',
+    older: 'Older',
+    related: 'More of the same kind',
     venue: 'Published in',
     date: 'Date',
     details: 'Details',
@@ -212,6 +224,73 @@ function peopleLine(p) {
 function pubPath(p) {
   return `p/${p.id}/` + (lang === 'en' ? '?lang=en' : '');
 }
+
+// The home page's default order: forthcoming first, then newest year; ties keep the JSON order.
+function sortPubs(list, newestFirst = true) {
+  const rank = (p) => (p.status === 'Forthcoming' ? 9999 : p.year || 0);
+  const dir = newestFirst ? -1 : 1;
+  return list
+    .map((p, i) => [p, i])
+    .sort(([a, ai], [b, bi]) => dir * (rank(a) - rank(b)) || ai - bi)
+    .map(([p]) => p);
+}
+
+/* ---------- Scroll reveals ---------- */
+
+const revealer = !matchMedia('(prefers-reduced-motion: reduce)').matches
+  && 'IntersectionObserver' in window
+  && new IntersectionObserver((entries) => {
+    // Things that come into view together arrive one after another.
+    entries.filter((e) => e.isIntersecting).forEach((e, i) => {
+      e.target.style.setProperty('--delay', i * 70 + 'ms');
+      e.target.classList.add('in');
+      revealer.unobserve(e.target);
+    });
+  }, { rootMargin: '0px 0px -8% 0px' });
+
+// The hiding classes are added here, so without JS (or with reduced motion) nothing is hidden.
+function reveal(nodes, cls = 'reveal') {
+  if (!revealer) return;
+  for (const node of nodes) {
+    node.classList.add(cls);
+    revealer.observe(node);
+  }
+}
+
+/* ---------- Email ---------- */
+
+// Laptops often have no mail app set up, so mailto: does nothing there.
+// Open Gmail's compose window instead, and copy the address for everyone else.
+const EMAIL = 'rashad.twam@gmail.com';
+const emailLink = $('a[data-label="email"]');
+if (emailLink && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  emailLink.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + EMAIL;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    // Older or locked-down browsers: copy through a hidden text field.
+    const field = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+    field.value = text;
+    document.body.append(field);
+    field.select();
+    const ok = document.execCommand('copy');
+    field.remove();
+    return ok;
+  }
+}
+
+const toast = $('.toast');
+emailLink?.addEventListener('click', async () => {
+  if (!toast || !(await copyText(EMAIL))) return;
+  toast.replaceChildren(t('emailCopied') + ' ', el('span', { dir: 'ltr' }, EMAIL));
+  toast.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => toast.classList.remove('show'), 3000);
+});
 
 /* ---------- Language switch ---------- */
 

@@ -42,6 +42,7 @@ const selected = new Set(); // empty = all
 let newestFirst = true;
 let expanded = false;
 let query = '';
+let animateRows = true; // first load and "show all" fade rows in; searching doesn't
 
 document.addEventListener('langchange', () => {
   renderCv();
@@ -54,9 +55,10 @@ document.addEventListener('langchange', () => {
 
 function renderCv() {
   for (const [id, items] of [['experience', experience], ['education', education]]) {
-    $('#' + id).replaceChildren(...items.map((item) => {
+    $('#' + id).replaceChildren(...items.map((item, i) => {
       const [role, org, dates] = item[lang];
-      return el('li', {},
+      // --i paces the line drawing from dot to dot
+      return el('li', { style: '--i:' + i },
         el('div', { class: 'dates' }, dates),
         el('div', { class: 'role' }, role),
         el('div', { class: 'org', dir: 'auto' }, ...linkOrgs(org)));
@@ -207,16 +209,6 @@ function hitLines(p, visibleText) {
   return lines;
 }
 
-// Forthcoming counts as the newest; ties keep the JSON order.
-function sortPubs(list) {
-  const rank = (p) => (p.status === 'Forthcoming' ? 9999 : p.year || 0);
-  const dir = newestFirst ? -1 : 1;
-  return list
-    .map((p, i) => [p, i])
-    .sort(([a, ai], [b, bi]) => dir * (rank(a) - rank(b)) || ai - bi)
-    .map(([p]) => p);
-}
-
 function pubItem(p) {
   const soon = p.status === 'Forthcoming';
   // The title opens the publication's own page, which holds its links.
@@ -274,7 +266,7 @@ function renderSearch() {
 }
 
 function renderPubs() {
-  let list = sortPubs(pubs.filter(isShown));
+  let list = sortPubs(pubs.filter(isShown), newestFirst);
   // A search shows every match.
   const limited = !selected.size && !query.trim() && !expanded && list.length > ALL_LIMIT;
   if (limited) list = list.slice(0, ALL_LIMIT);
@@ -282,6 +274,8 @@ function renderPubs() {
     ? list.map(pubItem)
     : [el('li', { class: 'pub-error' }, t('noResults'))]));
   $('.show-all').hidden = !limited;
+  if (animateRows) reveal(document.querySelectorAll('.pub'));
+  animateRows = false;
 
   // Start the counter on the list's first real year without rolling to it.
   const firstYear = list.find((p) => p.status !== 'Forthcoming' && p.year);
@@ -320,6 +314,7 @@ $('.search input').addEventListener('keydown', (e) => {
 
 $('.show-all').addEventListener('click', () => {
   expanded = true;
+  animateRows = true;
   renderPubs();
 });
 
@@ -405,44 +400,12 @@ function renderStats() {
   observer.observe($('.stats'));
 }
 
-/* ---------- Email ---------- */
-
-// Laptops often have no mail app set up, so mailto: does nothing there.
-// Open Gmail's compose window instead, and copy the address for everyone else.
-const EMAIL = 'rashad.twam@gmail.com';
-const emailLink = $('a[data-label="email"]');
-if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-  emailLink.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + EMAIL;
-}
-
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (e) {
-    // Older or locked-down browsers: copy through a hidden text field.
-    const field = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
-    field.value = text;
-    document.body.append(field);
-    field.select();
-    const ok = document.execCommand('copy');
-    field.remove();
-    return ok;
-  }
-}
-
-const toast = $('.toast');
-emailLink.addEventListener('click', async () => {
-  if (!(await copyText(EMAIL))) return;
-  toast.replaceChildren(t('emailCopied') + ' ', el('span', { dir: 'ltr' }, EMAIL));
-  toast.classList.add('show');
-  clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => toast.classList.remove('show'), 3000);
-});
-
 /* ---------- Start ---------- */
 
 setLang(initialLang());
+
+reveal(document.querySelectorAll('.intro > *, .pubs-head, .toolbar, .cv h2, .contact h2, .icons li'));
+reveal(document.querySelectorAll('.timeline'), 'draw');
 
 fetch('publications.json')
   .then((r) => {
