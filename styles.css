@@ -277,6 +277,10 @@ h2 { font-size: 28px; font-weight: 600; line-height: 1.4; }
 .pub .meta { margin-top: 6px; color: var(--text-2); font-size: 14px; }
 .pub .when { font-family: var(--en); color: var(--muted); }
 .pub .when.soon { font-family: inherit; }
+/* Search matches, and lines from fields the row doesn't otherwise show */
+.pub mark { background: #FCE9A8; color: inherit; border-radius: 2px; padding-inline: 1px; }
+.pub .hit { margin-top: 6px; color: var(--text-2); font-size: 14px; overflow-wrap: anywhere; }
+.pub .hit-label { color: var(--muted); }
 /* Centred under the dot, whatever the org name's own direction */
 .timeline .org { text-align: center; }
 

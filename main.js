@@ -76,28 +76,135 @@ function isShown(p) {
   return [...selected].some((key) => groupsOf(key).includes(p.group));
 }
 
+/* ---------- Search ---------- */
+
+const FOLD_LETTERS = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا', 'ى': 'ي', 'ة': 'ه', 'ؤ': 'و', 'ئ': 'ي' };
+const DIACRITIC = /[ً-ٰٟـ]/;
+
 // Folds case, Arabic diacritics and letter variants, so "اسرائيل" finds "إسرائيل".
-function fold(text) {
-  return String(text).toLowerCase()
-    .replace(/[ً-ٰٟـ]/g, '')
-    .replace(/[أإآٱ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/ؤ/g, 'و')
-    .replace(/ئ/g, 'ي');
+// map[i] is the index in the original text of folded character i, for highlighting.
+function foldMap(text) {
+  let out = '';
+  const map = [];
+  const s = String(text);
+  for (let i = 0; i < s.length; i++) {
+    if (DIACRITIC.test(s[i])) continue;
+    for (const c of FOLD_LETTERS[s[i]] || s[i].toLowerCase()) {
+      out += c;
+      map.push(i);
+    }
+  }
+  return { out, map };
 }
 
-// Searches both languages, whichever one the page is shown in.
-const SEARCH_FIELDS = ['title_en', 'title_ar', 'venue_en', 'venue_ar',
-  'coauthors_en', 'coauthors_ar', 'category_en', 'category_ar', 'year'];
+const fold = (text) => foldMap(text).out;
+
+function queryWords() {
+  return fold(query).split(/\s+/).filter(Boolean);
+}
+
+// Every field of a publication, both languages, links and DOIs included.
 const searchText = new WeakMap();
 
 function matchesQuery(p) {
-  const words = fold(query).split(/\s+/).filter(Boolean);
+  const words = queryWords();
   if (!words.length) return true;
-  if (!searchText.has(p)) searchText.set(p, fold(SEARCH_FIELDS.map((f) => p[f] || '').join(' ')));
+  if (!searchText.has(p)) {
+    const { id, group, ...fields } = p;
+    searchText.set(p, fold(Object.values(fields).flat().join('\n')));
+  }
   const text = searchText.get(p);
   return words.every((w) => text.includes(w));
+}
+
+// [start, end) ranges of the original text that match any word, merged.
+function matchRanges(text, words) {
+  const { out, map } = foldMap(text);
+  const ranges = [];
+  for (const w of words) {
+    for (let at = out.indexOf(w); at !== -1; at = out.indexOf(w, at + 1)) {
+      ranges.push([map[at], map[at + w.length - 1] + 1]);
+    }
+  }
+  ranges.sort((a, b) => a[0] - b[0]);
+  return ranges.reduce((merged, r) => {
+    const last = merged[merged.length - 1];
+    if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+    else merged.push(r);
+    return merged;
+  }, []);
+}
+
+// Plain text -> text and <mark>s, for el(...children).
+function highlight(text, words = queryWords()) {
+  text = String(text);
+  if (!words.length) return [text];
+  const parts = [];
+  let pos = 0;
+  for (const [start, end] of matchRanges(text, words)) {
+    parts.push(text.slice(pos, start), el('mark', {}, text.slice(start, end)));
+    pos = end;
+  }
+  parts.push(text.slice(pos));
+  return parts.filter((part) => part !== '');
+}
+
+// Highlights inside linkOrgs(...) output too.
+function highlightNodes(nodes) {
+  return nodes.flatMap((node) => {
+    if (typeof node === 'string') return highlight(node);
+    node.replaceChildren(...highlight(node.textContent));
+    return [node];
+  });
+}
+
+// A short stretch of a long text around its first match.
+function snippet(text, words) {
+  text = String(text).replace(/\s+/g, ' ').trim();
+  const [first] = matchRanges(text, words);
+  if (!first || text.length <= 180) return highlight(text, words);
+  let start = Math.max(0, first[0] - 60);
+  let end = Math.min(text.length, first[1] + 120);
+  // Cut at spaces, never through the match itself.
+  if (start > 0) start = Math.min(first[0], text.indexOf(' ', start) + 1 || start);
+  if (end < text.length) end = Math.max(first[1], text.lastIndexOf(' ', end));
+  return [start > 0 ? '…' : '', ...highlight(text.slice(start, end), words), end < text.length ? '…' : '']
+    .filter((part) => part !== '');
+}
+
+// Fields the list row doesn't show, in the order worth surfacing.
+function hiddenFields(p) {
+  const other = lang === 'ar' ? 'en' : 'ar';
+  return [
+    ['', p['title_' + other]],
+    [t('abstract'), p['abstract_' + lang]],
+    [t('abstract'), p['abstract_' + other]],
+    [t('details'), p.details],
+    [t('link'), (p.links || []).join(' ')],
+    [t('venue'), p['venue_' + other]],
+    ['', p['coauthors_' + other]],
+    ['', [p['category_' + lang], p['category_' + other]].join(' · ')],
+    [t('date'), [p['date_' + lang], p['date_' + other]].join(' · ')],
+  ].filter(([, value]) => value);
+}
+
+// One line per hidden field holding a word the visible row doesn't.
+function hitLines(p, visibleText) {
+  const words = queryWords();
+  const shown = fold(visibleText);
+  let missing = words.filter((w) => !shown.includes(w));
+  const lines = [];
+  for (const [label, value] of hiddenFields(p)) {
+    if (!missing.length) break;
+    const folded = fold(value);
+    const found = missing.filter((w) => folded.includes(w));
+    if (!found.length) continue;
+    missing = missing.filter((w) => !found.includes(w));
+    lines.push(el('p', { class: 'hit' },
+      label ? el('span', { class: 'hit-label' }, label + ': ') : null,
+      el('span', { dir: 'auto' }, ...snippet(value, words))));
+  }
+  return lines;
 }
 
 // Forthcoming counts as the newest; ties keep the JSON order.
@@ -114,15 +221,19 @@ function pubItem(p) {
   const soon = p.status === 'Forthcoming';
   // The title opens the publication's own page, which holds its links.
   const main = el('p', { class: 'main' },
-    el('a', { href: pubPath(p) }, p['title_' + lang]));
+    el('a', { href: pubPath(p) }, ...highlight(p['title_' + lang])));
 
+  const when = soon ? t('forthcoming') : String(p.year || '');
   const meta = el('p', { class: 'meta' },
-    el('span', { class: soon ? 'when soon' : 'when' }, soon ? t('forthcoming') : String(p.year || '')),
-    ' · ', ...linkOrgs([p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · ')));
+    el('span', { class: soon ? 'when soon' : 'when' }, ...highlight(when)),
+    ' · ', ...highlightNodes(linkOrgs([p['venue_' + lang], peopleLine(p)].filter(Boolean).join(' · '))));
+
+  const hits = query.trim() ? hitLines(p, main.textContent + ' ' + meta.textContent) : [];
 
   return el('li', { class: 'pub', 'data-year': soon ? 'soon' : String(p.year || '') },
     main,
-    meta);
+    meta,
+    ...hits);
 }
 
 function chip(label, count, pressed, onClick) {
